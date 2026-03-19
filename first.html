@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tech Daanob | Future Gadgets</title>
+    <!-- GSAP for Animations -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+    <!-- Three.js for 3D -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <style>
+        :root {
+            --bg: #030005;
+            --accent: #00f3ff;
+            --accent-dim: rgba(0, 243, 255, 0.3);
+            --purple: #bc00ff;
+            --text: #ffffff;
+            --card-bg: rgba(255, 255, 255, 0.03);
+            --glass: rgba(255, 255, 255, 0.05);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            cursor: none;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            scrollbar-width: thin;
+            scrollbar-color: var(--accent) transparent;
+        }
+
+        /* Custom Cursor */
+        #cursor {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            background: var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9999;
+            transition: transform 0.1s ease;
+            box-shadow: 0 0 15px var(--accent);
+        }
+        #cursor-blur {
+            position: fixed;
+            width: 40px;
+            height: 40px;
+            border: 1px solid var(--accent);
+            border-radius: 50%;
+            pointer-events: none;
+            z-index: 9998;
+            transition: transform 0.15s ease-out;
+        }
+
+        /* Three.js Background */
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.6;
+        }
+
+        /* Layout */
+        nav {
+            position: fixed;
+            top: 0;
+            width: 100%;
+            padding: 20px 50px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            z-index: 1000;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+
+        .logo {
+            font-size: 1.5rem;
+            font-weight: 900;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-transform: uppercase;
+        }
+
+        .nav-links a {
+            color: white;
+            text-decoration: none;
+            margin-left: 30px;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            transition: 0.3s;
+        }
+
+        .nav-links a:hover {
+            color: var(--accent);
+        }
+
+        section {
+            min-height: 100vh;
+            padding: 100px 10%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        /* Hero Section */
+        .hero {
+            align-items: flex-start;
+        }
+
+        .hero h1 {
+            font-size: clamp(3rem, 10vw, 6rem);
+            line-height: 0.9;
+            text-transform: uppercase;
+            margin-bottom: 20px;
+            background: linear-gradient(90deg, #fff, var(--accent));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .hero p {
+            font-size: 1.2rem;
+            max-width: 600px;
+            color: #aaa;
+            margin-bottom: 30px;
+        }
+
+        .btn {
+            padding: 15px 40px;
+            border: 1px solid var(--accent);
+            background: transparent;
+            color: var(--accent);
+            font-weight: bold;
+            text-transform: uppercase;
+            transition: 0.4s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn:hover {
+            background: var(--accent);
+            color: black;
+            box-shadow: 0 0 20px var(--accent);
+        }
+
+        /* About Section */
+        .about-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 50px;
+            align-items: center;
+        }
+
+        .about-content h2 {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            color: var(--purple);
+        }
+
+        /* Products Section */
+        .products-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin-top: 50px;
+        }
+
+        .product-card {
+            background: var(--glass);
+            padding: 30px;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            transition: 0.5s;
+            text-align: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .product-card:hover {
+            transform: translateY(-10px);
+            border-color: var(--accent);
+            box-shadow: 0 10px 30px rgba(0, 243, 255, 0.1);
+        }
+
+        .product-icon {
+            font-size: 4rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .product-card h3 {
+            margin-bottom: 10px;
+            color: var(--accent);
+        }
+
+        /* 3D Carousel Section */
+        .carousel-container {
+            height: 600px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            perspective: 1000px;
+            overflow: hidden;
+        }
+
+        .carousel-scene {
+            width: 300px;
+            height: 400px;
+            position: relative;
+            transform-style: preserve-3d;
+            animation: rotateCarousel 20s infinite linear;
+        }
+
+        .carousel-item {
+            position: absolute;
+            width: 250px;
+            height: 350px;
+            left: 25px;
+            top: 25px;
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(15px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            text-align: center;
+            box-shadow: 0 0 20px rgba(0,0,0,0.5);
+        }
+
+        @keyframes rotateCarousel {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+
+        /* Partner Marquee */
+        .marquee {
+            width: 100%;
+            overflow: hidden;
+            padding: 50px 0;
+            background: rgba(255,255,255,0.02);
+            white-space: nowrap;
+        }
+
+        .marquee-content {
+            display: inline-block;
+            animation: marquee 30s linear infinite;
+        }
+
+        .marquee-item {
+            display: inline-block;
+            font-size: 2rem;
+            font-weight: bold;
+            margin: 0 50px;
+            opacity: 0.5;
+            color: var(--accent);
+        }
+
+        @keyframes marquee {
+            from { transform: translateX(0); }
+            to { transform: translateX(-50%); }
+        }
+
+        /* Reviews */
+        .reviews-container {
+            display: flex;
+            gap: 20px;
+            overflow-x: auto;
+            padding: 20px 0;
+            scrollbar-width: none;
+        }
+
+        .review-card {
+            min-width: 300px;
+            background: var(--glass);
+            padding: 30px;
+            border-radius: 15px;
+        }
+
+        /* Footer */
+        footer {
+            padding: 80px 10%;
+            background: #000;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            text-align: center;
+        }
+
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 40px;
+            text-align: left;
+            margin-bottom: 50px;
+        }
+
+        .footer-logo {
+            font-size: 1.5rem;
+            color: var(--accent);
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .footer-links p { margin-bottom: 10px; color: #888; }
+
+        @media (max-width: 768px) {
+            nav { padding: 20px; }
+            .nav-links { display: none; }
+            .about-grid { grid-template-columns: 1fr; }
+            section { padding: 80px 5%; }
+            .carousel-scene { width: 200px; height: 300px; }
+            .carousel-item { width: 180px; height: 260px; left: 10px; }
+        }
+    </style>
+</head>
+<body>
+
+    <div id="cursor"></div>
+    <div id="cursor-blur"></div>
+    <div id="canvas-container"></div>
+
+    <nav>
+        <div class="logo">Tech Daanob</div>
+        <div class="nav-links">
+            <a href="#home">Home</a>
+            <a href="#about">About</a>
+            <a href="#products">Products</a>
+            <a href="#partners">Partners</a>
+        </div>
+    </nav>
+
+    <section id="home" class="hero">
+        <h1 class="reveal">Next-Gen<br>Gadgets</h1>
+        <p class="reveal">We don't sell phones. We sell the future. Explore our curated collection of bleeding-edge tech accessories and cyber-lifestyle tools.</p>
+        <button class="btn reveal">Explore Void</button>
+    </section>
+
+    <section id="about" class="about">
+        <div class="about-grid">
+            <div class="about-content">
+                <h2 class="reveal">Beyond Basic</h2>
+                <p class="reveal">Tech Daanob is born from the dark corners of innovation. While others focus on mobiles and laptops, we focus on the gadgets that define your cyber-identity.</p>
+                <br>
+                <p class="reveal">From neural-link interfaces to haptic-feedback wearables, we bridge the gap between human and machine.</p>
+            </div>
+            <div class="about-visual reveal" style="font-size: 10rem; text-align: center;">
+                🛰️
+            </div>
+        </div>
+    </section>
+
+    <section id="products">
+        <h2 style="font-size: 3rem; margin-bottom: 40px;" class="reveal">Core Inventory</h2>
+        <div class="products-grid">
+            <div class="product-card reveal">
+                <span class="product-icon">🧤</span>
+                <h3>Haptic Sleeves</h3>
+                <p>Feel the digital world. Full immersion for VR and remote connectivity.</p>
+            </div>
+            <div class="product-card reveal">
+                <span class="product-icon">💍</span>
+                <h3>Neural Ring</h3>
+                <p>Control your smart environment with a flick of your finger. Bio-synced.</p>
+            </div>
+            <div class="product-card reveal">
+                <span class="product-icon">👓</span>
+                <h3>Cyber-Specs</h3>
+                <p>AR heads-up display with real-time biometric scanning capabilities.</p>
+            </div>
+            <div class="product-card reveal">
+                <span class="product-icon">🛸</span>
+                <h3>Nano Drone</h3>
+                <p>Automated security orb with 8K thermal imaging and stealth mode.</p>
+            </div>
+        </div>
+    </section>
+
+    <section id="carousel-section">
+        <h2 style="text-align: center; margin-bottom: 50px;" class="reveal">Interactive Nexus</h2>
+        <div class="carousel-container reveal">
+            <div class="carousel-scene" id="carousel">
+                <!-- Items added via JS -->
+            </div>
+        </div>
+    </section>
+
+    <section id="partners">
+        <div class="marquee">
+            <div class="marquee-content">
+                <span class="marquee-item">NEURALINK</span>
+                <span class="marquee-item">CYBERPUNK ENT.</span>
+                <span class="marquee-item">VOID TECH</span>
+                <span class="marquee-item">ROBO-SYNE</span>
+                <span class="marquee-item">HYPERLOOP</span>
+                <span class="marquee-item">ARES DYNAMICS</span>
+                <!-- Repeat for smooth loop -->
+                <span class="marquee-item">NEURALINK</span>
+                <span class="marquee-item">CYBERPUNK ENT.</span>
+                <span class="marquee-item">VOID TECH</span>
+                <span class="marquee-item">ROBO-SYNE</span>
+                <span class="marquee-item">HYPERLOOP</span>
+                <span class="marquee-item">ARES DYNAMICS</span>
+            </div>
+        </div>
+    </section>
+
+    <section id="reviews">
+        <h2 style="margin-bottom: 40px;" class="reveal">User Feedback</h2>
+        <div class="reviews-container reveal">
+            <div class="review-card">
+                <p>"The Haptic sleeves changed how I game. I can literally feel the rain in-game."</p>
+                <br>
+                <strong style="color: var(--accent);">- User_882</strong>
+            </div>
+            <div class="review-card">
+                <p>"Tech Daanob has the weirdest, coolest gadgets. My house is now fully neural-controlled."</p>
+                <br>
+                <strong style="color: var(--accent);">- CyberGhost</strong>
+            </div>
+            <div class="review-card">
+                <p>"The Nano drone is silent and perfect for urban exploration. Best purchase this year."</p>
+                <br>
+                <strong style="color: var(--accent);">- Echo_Scanner</strong>
+            </div>
+        </div>
+    </section>
+
+    <footer>
+        <div class="footer-grid">
+            <div class="footer-info">
+                <span class="footer-logo">Tech Daanob</span>
+                <p>Equipping the citizens of tomorrow, today. Join the evolution.</p>
+            </div>
+            <div class="footer-links">
+                <h4>Navigation</h4>
+                <p>Home</p>
+                <p>Products</p>
+                <p>Contact</p>
+            </div>
+            <div class="footer-links">
+                <h4>Social</h4>
+                <p>Twitter / X</p>
+                <p>Instagram</p>
+                <p>GitHub</p>
+            </div>
+        </div>
+        <p style="opacity: 0.3; font-size: 0.8rem;">&copy; 2024 Tech Daanob. All rights reserved. Designed for the Metaverse.</p>
+    </footer>
+
+    <script>
+        // --- CURSOR LOGIC ---
+        const cursor = document.getElementById('cursor');
+        const cursorBlur = document.getElementById('cursor-blur');
+
+        document.addEventListener('mousemove', (e) => {
+            gsap.to(cursor, { x: e.clientX, y: e.clientY, duration: 0 });
+            gsap.to(cursorBlur, { x: e.clientX - 15, y: e.clientY - 15, duration: 0.15 });
+        });
+
+        // --- THREE.JS BACKGROUND ---
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const geometry = new THREE.TorusKnotGeometry(10, 3, 100, 16);
+        const material = new THREE.MeshStandardMaterial({ 
+            color: 0x00f3ff, 
+            wireframe: true,
+            emissive: 0x00f3ff,
+            emissiveIntensity: 0.5
+        });
+        const torus = new THREE.Mesh(geometry, material);
+        scene.add(torus);
+
+        const pointLight = new THREE.PointLight(0xffffff, 1);
+        pointLight.position.set(20, 20, 20);
+        scene.add(pointLight);
+
+        camera.position.z = 30;
+
+        function animate3D() {
+            requestAnimationFrame(animate3D);
+            torus.rotation.x += 0.005;
+            torus.rotation.y += 0.005;
+            torus.rotation.z += 0.002;
+            renderer.render(scene, camera);
+        }
+        animate3D();
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // --- 3D CAROUSEL ---
+        const carousel = document.getElementById('carousel');
+        const carouselData = [
+            { icon: '🎧', title: 'Sonic Rift' },
+            { icon: '🔋', title: 'Plasma Core' },
+            { icon: '🦾', title: 'Augment-X' },
+            { icon: '🌌', title: 'Nebula Projector' },
+            { icon: '⚡', title: 'Volt Grip' },
+            { icon: '📡', title: 'Signal Jammer' }
+        ];
+
+        carouselData.forEach((data, i) => {
+            const item = document.createElement('div');
+            item.className = 'carousel-item';
+            const angle = (i / carouselData.length) * 360;
+            item.style.transform = `rotateY(${angle}deg) translateZ(400px)`;
+            item.innerHTML = `
+                <div style="font-size: 3rem;">${data.icon}</div>
+                <h3 style="margin-top:20px;">${data.title}</h3>
+                <p style="font-size:0.8rem; margin-top:10px; opacity:0.7;">Restock Coming Soon</p>
+            `;
+            carousel.appendChild(item);
+        });
+
+        // --- GSAP ANIMATIONS ---
+        gsap.registerPlugin(ScrollTrigger);
+
+        // Parallax and Reveal Animations
+        const reveals = document.querySelectorAll('.reveal');
+        reveals.forEach((el) => {
+            gsap.from(el, {
+                scrollTrigger: {
+                    trigger: el,
+                    start: "top 90%",
+                    toggleActions: "play none none reverse"
+                },
+                y: 50,
+                opacity: 0,
+                duration: 1,
+                ease: "power4.out"
+            });
+        });
+
+        // Hero parallax
+        gsap.to(".hero h1", {
+            scrollTrigger: {
+                trigger: ".hero",
+                start: "top top",
+                scrub: true
+            },
+            y: 200,
+            opacity: 0
+        });
+
+        // About section parallax image
+        gsap.to(".about-visual", {
+            scrollTrigger: {
+                trigger: ".about",
+                start: "top bottom",
+                scrub: true
+            },
+            y: -100,
+            rotate: 360
+        });
+
+        // Smooth color shift background on scroll
+        gsap.to("body", {
+            scrollTrigger: {
+                trigger: ".about",
+                start: "top center",
+                end: "bottom center",
+                scrub: true
+            },
+            backgroundColor: "#0a0015"
+        });
+
+        // Click interaction for products
+        document.querySelectorAll('.product-card').forEach(card => {
+            card.addEventListener('mousedown', () => {
+                gsap.to(card, { scale: 0.95, duration: 0.1 });
+            });
+            card.addEventListener('mouseup', () => {
+                gsap.to(card, { scale: 1, duration: 0.2 });
+            });
+        });
+
+    </script>
+</body>
+</html>
