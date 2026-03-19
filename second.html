@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Tech Daanob — Future of Gadgets</title>
+<link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&family=Rajdhani:wght@300;400;500;600;700&family=Share+Tech+Mono&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/gsap.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollTrigger.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.5/ScrollToPlugin.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+<style>
+:root{
+  --bg:#04040c;
+  --bg2:#08081a;
+  --cyan:#00f5ff;
+  --cyan2:#00c8d4;
+  --violet:#7b2fff;
+  --violet2:#a855f7;
+  --pink:#ff2d78;
+  --white:#e8eaf6;
+  --grey:#8892b0;
+  --card-bg:rgba(10,12,30,0.85);
+  --border:rgba(0,245,255,0.15);
+  --glow:0 0 30px rgba(0,245,255,0.3),0 0 60px rgba(0,245,255,0.1);
+  --glow-v:0 0 30px rgba(123,47,255,0.4),0 0 60px rgba(123,47,255,0.15);
+  --font-head:'Orbitron',sans-serif;
+  --font-body:'Rajdhani',sans-serif;
+  --font-mono:'Share Tech Mono',monospace;
+}
+*{margin:0;padding:0;box-sizing:border-box;cursor:none;}
+html{scroll-behavior:smooth;overflow-x:hidden;}
+body{background:var(--bg);color:var(--white);font-family:var(--font-body);overflow-x:hidden;min-height:100vh;}
+
+/* ── CURSOR ─────────────────────────────── */
+#cursor{position:fixed;width:12px;height:12px;background:var(--cyan);border-radius:50%;pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:width .2s,height .2s,background .2s;mix-blend-mode:screen;box-shadow:0 0 20px var(--cyan),0 0 40px var(--cyan);}
+#cursor-ring{position:fixed;width:40px;height:40px;border:1.5px solid rgba(0,245,255,0.5);border-radius:50%;pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:width .4s,height .4s,border-color .3s,transform .1s;backdrop-filter:blur(2px);}
+#cursor-trail{position:fixed;width:6px;height:6px;background:rgba(123,47,255,0.6);border-radius:50%;pointer-events:none;z-index:9997;transform:translate(-50%,-50%);}
+body:hover #cursor{opacity:1;}
+a:hover~#cursor,button:hover~#cursor{width:20px;height:20px;}
+
+/* ── SCROLLBAR ───────────────────────────── */
+::-webkit-scrollbar{width:4px;}
+::-webkit-scrollbar-track{background:var(--bg);}
+::-webkit-scrollbar-thumb{background:linear-gradient(var(--cyan),var(--violet));border-radius:2px;}
+
+/* ── NAV ─────────────────────────────────── */
+nav{position:fixed;top:0;left:0;right:0;z-index:1000;padding:1.2rem 4rem;display:flex;align-items:center;justify-content:space-between;backdrop-filter:blur(20px);background:rgba(4,4,12,0.7);border-bottom:1px solid var(--border);}
+.nav-logo{font-family:var(--font-head);font-size:1.3rem;font-weight:700;background:linear-gradient(90deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:2px;}
+.nav-logo span{color:var(--cyan);}
+.nav-links{display:flex;gap:2.5rem;list-style:none;}
+.nav-links a{font-family:var(--font-mono);font-size:.8rem;color:var(--grey);text-decoration:none;letter-spacing:2px;text-transform:uppercase;transition:color .3s,text-shadow .3s;position:relative;}
+.nav-links a::after{content:'';position:absolute;bottom:-4px;left:0;width:0;height:1px;background:var(--cyan);transition:width .3s;}
+.nav-links a:hover{color:var(--cyan);text-shadow:0 0 15px var(--cyan);}
+.nav-links a:hover::after{width:100%;}
+.nav-cta{font-family:var(--font-mono);font-size:.75rem;padding:.6rem 1.5rem;border:1px solid var(--cyan);color:var(--cyan);text-decoration:none;letter-spacing:2px;text-transform:uppercase;transition:all .3s;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);}
+.nav-cta:hover{background:var(--cyan);color:var(--bg);box-shadow:var(--glow);}
+.hamburger{display:none;flex-direction:column;gap:5px;cursor:pointer;}
+.hamburger span{display:block;width:24px;height:2px;background:var(--cyan);}
+
+/* ── CANVAS / HERO ───────────────────────── */
+#hero{position:relative;height:100vh;display:flex;align-items:center;overflow:hidden;}
+#threejs-canvas{position:absolute;inset:0;z-index:0;}
+.hero-content{position:relative;z-index:2;padding:0 6rem;max-width:900px;}
+.hero-badge{font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);letter-spacing:4px;text-transform:uppercase;margin-bottom:1.5rem;display:flex;align-items:center;gap:.8rem;}
+.hero-badge::before{content:'';width:40px;height:1px;background:var(--cyan);}
+.hero-title{font-family:var(--font-head);font-size:clamp(3rem,7vw,7rem);font-weight:900;line-height:1;margin-bottom:1.5rem;overflow:hidden;}
+.hero-title .line{overflow:hidden;display:block;}
+.hero-title .line span{display:block;}
+.hero-title .t1{background:linear-gradient(135deg,#fff 30%,var(--cyan));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-title .t2{background:linear-gradient(135deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.hero-sub{font-size:1.1rem;color:var(--grey);line-height:1.8;max-width:500px;margin-bottom:2.5rem;font-weight:400;}
+.hero-btns{display:flex;gap:1.5rem;flex-wrap:wrap;}
+.btn-primary{font-family:var(--font-mono);font-size:.8rem;padding:.9rem 2.5rem;background:linear-gradient(135deg,var(--cyan),var(--violet));color:#000;font-weight:600;letter-spacing:2px;text-decoration:none;text-transform:uppercase;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:all .3s;box-shadow:0 0 30px rgba(0,245,255,0.4);}
+.btn-primary:hover{transform:translateY(-3px);box-shadow:0 0 50px rgba(0,245,255,0.6);}
+.btn-secondary{font-family:var(--font-mono);font-size:.8rem;padding:.9rem 2.5rem;border:1px solid rgba(0,245,255,0.3);color:var(--cyan);letter-spacing:2px;text-decoration:none;text-transform:uppercase;transition:all .3s;clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);}
+.btn-secondary:hover{border-color:var(--cyan);background:rgba(0,245,255,0.05);box-shadow:var(--glow);}
+.hero-scroll{position:absolute;bottom:2rem;left:50%;transform:translateX(-50%);display:flex;flex-direction:column;align-items:center;gap:.5rem;z-index:2;}
+.hero-scroll span{font-family:var(--font-mono);font-size:.65rem;color:var(--grey);letter-spacing:3px;text-transform:uppercase;}
+.scroll-line{width:1px;height:60px;background:linear-gradient(var(--cyan),transparent);animation:scrollPulse 2s ease-in-out infinite;}
+@keyframes scrollPulse{0%,100%{opacity:.3;transform:scaleY(1);}50%{opacity:1;transform:scaleY(1.2);}}
+.hero-stats{position:absolute;right:6rem;bottom:8rem;z-index:2;display:flex;flex-direction:column;gap:1.5rem;}
+.stat-item{text-align:right;}
+.stat-num{font-family:var(--font-head);font-size:2rem;font-weight:700;background:linear-gradient(var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.stat-label{font-family:var(--font-mono);font-size:.65rem;color:var(--grey);letter-spacing:2px;text-transform:uppercase;}
+.hero-grid-line{position:absolute;inset:0;background-image:linear-gradient(rgba(0,245,255,0.03) 1px,transparent 1px),linear-gradient(90deg,rgba(0,245,255,0.03) 1px,transparent 1px);background-size:60px 60px;z-index:1;}
+
+/* ── SECTION COMMON ──────────────────────── */
+section{position:relative;padding:8rem 6rem;}
+.section-header{margin-bottom:5rem;position:relative;}
+.section-label{font-family:var(--font-mono);font-size:.7rem;color:var(--cyan);letter-spacing:4px;text-transform:uppercase;margin-bottom:1rem;display:flex;align-items:center;gap:1rem;}
+.section-label::after{content:'';flex:1;max-width:60px;height:1px;background:var(--cyan);}
+.section-title{font-family:var(--font-head);font-size:clamp(2rem,4vw,3.5rem);font-weight:700;line-height:1.1;}
+.section-title .accent{background:linear-gradient(135deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.divider-line{position:absolute;left:0;top:50%;width:200vw;height:1px;background:linear-gradient(90deg,transparent,var(--border),transparent);pointer-events:none;}
+
+/* ── ABOUT ────────────────────────────────── */
+#about{background:var(--bg2);}
+.about-grid{display:grid;grid-template-columns:1fr 1fr;gap:6rem;align-items:center;}
+.about-visual{position:relative;height:500px;}
+.about-orb{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;}
+#about-canvas{width:100%;height:100%;border-radius:20px;}
+.about-tags{display:flex;flex-wrap:wrap;gap:.8rem;margin-top:2rem;}
+.tag{font-family:var(--font-mono);font-size:.7rem;padding:.4rem 1rem;border:1px solid var(--border);color:var(--grey);letter-spacing:1px;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);transition:all .3s;}
+.tag:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow);}
+.about-text p{color:var(--grey);font-size:1.05rem;line-height:1.9;margin-bottom:1.5rem;}
+.about-features{display:grid;grid-template-columns:1fr 1fr;gap:1.5rem;margin-top:2rem;}
+.feature-card{padding:1.5rem;border:1px solid var(--border);background:rgba(0,245,255,0.02);clip-path:polygon(12px 0,100% 0,100% calc(100% - 12px),calc(100% - 12px) 100%,0 100%,0 12px);transition:all .3s;}
+.feature-card:hover{border-color:rgba(0,245,255,0.4);background:rgba(0,245,255,0.04);transform:translateY(-4px);}
+.feature-icon{font-size:1.8rem;margin-bottom:.8rem;}
+.feature-title{font-family:var(--font-head);font-size:.75rem;font-weight:600;color:var(--cyan);letter-spacing:1px;margin-bottom:.4rem;}
+.feature-desc{font-size:.85rem;color:var(--grey);line-height:1.6;}
+
+/* ── PRODUCTS ─────────────────────────────── */
+#products{background:var(--bg);}
+.products-filter{display:flex;gap:1rem;margin-bottom:3rem;flex-wrap:wrap;}
+.filter-btn{font-family:var(--font-mono);font-size:.7rem;padding:.5rem 1.5rem;border:1px solid var(--border);color:var(--grey);letter-spacing:2px;text-transform:uppercase;background:transparent;transition:all .3s;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);}
+.filter-btn.active,.filter-btn:hover{border-color:var(--cyan);color:var(--cyan);background:rgba(0,245,255,0.05);box-shadow:var(--glow);}
+.products-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:2rem;}
+.product-card{border:1px solid var(--border);background:var(--card-bg);clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);transition:all .4s;position:relative;overflow:hidden;group:true;}
+.product-card::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(0,245,255,0.03),rgba(123,47,255,0.03));opacity:0;transition:opacity .4s;}
+.product-card:hover{transform:translateY(-8px);border-color:rgba(0,245,255,0.4);box-shadow:0 20px 60px rgba(0,0,0,0.5),var(--glow);}
+.product-card:hover::before{opacity:1;}
+.product-img{height:200px;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,rgba(0,245,255,0.05),rgba(123,47,255,0.05));position:relative;overflow:hidden;font-size:5rem;}
+.product-img::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.product-badge{position:absolute;top:1rem;right:1rem;font-family:var(--font-mono);font-size:.6rem;padding:.3rem .8rem;background:var(--cyan);color:#000;letter-spacing:1px;font-weight:700;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px);}
+.product-badge.hot{background:var(--pink);}
+.product-badge.new{background:var(--violet);}
+.product-info{padding:1.5rem;}
+.product-cat{font-family:var(--font-mono);font-size:.65rem;color:var(--cyan);letter-spacing:2px;text-transform:uppercase;margin-bottom:.5rem;}
+.product-name{font-family:var(--font-head);font-size:.95rem;font-weight:600;color:var(--white);margin-bottom:.5rem;line-height:1.3;}
+.product-desc{font-size:.85rem;color:var(--grey);line-height:1.6;margin-bottom:1rem;}
+.product-footer{display:flex;align-items:center;justify-content:space-between;}
+.product-price{font-family:var(--font-head);font-size:1.1rem;font-weight:700;background:linear-gradient(var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.product-btn{font-family:var(--font-mono);font-size:.65rem;padding:.5rem 1rem;border:1px solid var(--cyan);color:var(--cyan);background:transparent;letter-spacing:1px;text-transform:uppercase;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);transition:all .3s;}
+.product-btn:hover{background:var(--cyan);color:#000;}
+
+/* ── CAROUSEL (3D BLUR) ──────────────────── */
+#carousel-section{background:var(--bg2);overflow:hidden;}
+.carousel-wrapper{perspective:1200px;position:relative;height:420px;display:flex;align-items:center;justify-content:center;}
+.carousel-track{position:relative;width:100%;height:380px;transform-style:preserve-3d;}
+.carousel-card{position:absolute;width:280px;height:360px;top:50%;left:50%;margin:-180px -140px;border:1px solid var(--border);background:var(--card-bg);border-radius:4px;backdrop-filter:blur(10px);transition:all .8s cubic-bezier(.4,0,.2,1);padding:2rem;display:flex;flex-direction:column;justify-content:space-between;clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);overflow:hidden;}
+.carousel-card::before{content:'';position:absolute;top:-50%;left:-50%;width:200%;height:200%;background:conic-gradient(from 0deg,transparent,rgba(0,245,255,0.05),transparent);animation:cardSpin 8s linear infinite;}
+.carousel-card .card-icon{font-size:3.5rem;margin-bottom:1rem;}
+.carousel-card .card-title{font-family:var(--font-head);font-size:1rem;font-weight:700;color:var(--white);margin-bottom:.5rem;}
+.carousel-card .card-text{font-size:.85rem;color:var(--grey);line-height:1.6;}
+.carousel-card .card-price{font-family:var(--font-head);font-size:1.3rem;background:linear-gradient(var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+@keyframes cardSpin{to{transform:rotate(360deg);}}
+.carousel-controls{display:flex;justify-content:center;gap:1rem;margin-top:3rem;}
+.cc-btn{width:44px;height:44px;border:1px solid var(--border);background:transparent;color:var(--cyan);display:flex;align-items:center;justify-content:center;font-size:1.2rem;clip-path:polygon(8px 0,100% 0,100% calc(100% - 8px),calc(100% - 8px) 100%,0 100%,0 8px);transition:all .3s;}
+.cc-btn:hover{border-color:var(--cyan);background:rgba(0,245,255,0.1);box-shadow:var(--glow);}
+
+/* ── PARTNERS ─────────────────────────────── */
+#partners{background:var(--bg);padding:6rem 0;}
+.partners-header{padding:0 6rem;margin-bottom:4rem;}
+.marquee-container{overflow:hidden;position:relative;padding:1.5rem 0;}
+.marquee-container::before,.marquee-container::after{content:'';position:absolute;top:0;bottom:0;width:200px;z-index:2;}
+.marquee-container::before{left:0;background:linear-gradient(90deg,var(--bg),transparent);}
+.marquee-container::after{right:0;background:linear-gradient(-90deg,var(--bg),transparent);}
+.marquee-track{display:flex;gap:3rem;width:max-content;animation:marquee 25s linear infinite;}
+.marquee-track2{animation:marquee2 30s linear infinite;}
+@keyframes marquee{0%{transform:translateX(0);}100%{transform:translateX(-50%);}}
+@keyframes marquee2{0%{transform:translateX(-50%);}100%{transform:translateX(0);}}
+.partner-logo{display:flex;align-items:center;gap:1rem;padding:1.2rem 2.5rem;border:1px solid var(--border);background:rgba(0,245,255,0.02);white-space:nowrap;clip-path:polygon(10px 0,100% 0,100% calc(100% - 10px),calc(100% - 10px) 100%,0 100%,0 10px);transition:all .3s;}
+.partner-logo:hover{border-color:rgba(0,245,255,0.4);background:rgba(0,245,255,0.05);}
+.partner-icon{font-size:1.5rem;}
+.partner-name{font-family:var(--font-head);font-size:.75rem;font-weight:600;color:var(--grey);letter-spacing:2px;text-transform:uppercase;}
+
+/* ── REVIEWS ─────────────────────────────── */
+#reviews{background:var(--bg2);}
+.reviews-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:2rem;}
+.review-card{border:1px solid var(--border);background:var(--card-bg);padding:2rem;clip-path:polygon(16px 0,100% 0,100% calc(100% - 16px),calc(100% - 16px) 100%,0 100%,0 16px);transition:all .4s;position:relative;overflow:hidden;}
+.review-card::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);}
+.review-card:hover{transform:translateY(-6px);border-color:rgba(0,245,255,0.3);box-shadow:var(--glow);}
+.review-stars{display:flex;gap:.3rem;margin-bottom:1rem;}
+.star{color:var(--cyan);font-size:1rem;text-shadow:0 0 10px var(--cyan);}
+.review-text{font-size:1rem;color:var(--grey);line-height:1.8;margin-bottom:1.5rem;font-style:italic;}
+.review-text::before{content:'"';font-family:var(--font-head);font-size:3rem;color:rgba(0,245,255,0.2);display:block;line-height:.5;margin-bottom:1rem;}
+.review-author{display:flex;align-items:center;gap:1rem;}
+.review-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cyan),var(--violet));display:flex;align-items:center;justify-content:center;font-family:var(--font-head);font-size:.8rem;font-weight:700;color:#000;flex-shrink:0;}
+.review-name{font-family:var(--font-head);font-size:.8rem;font-weight:600;color:var(--white);margin-bottom:.2rem;}
+.review-role{font-family:var(--font-mono);font-size:.65rem;color:var(--grey);letter-spacing:1px;}
+.review-product-tag{position:absolute;top:1.5rem;right:1.5rem;font-family:var(--font-mono);font-size:.6rem;color:var(--violet2);letter-spacing:1px;border:1px solid rgba(123,47,255,0.3);padding:.2rem .6rem;clip-path:polygon(4px 0,100% 0,100% calc(100% - 4px),calc(100% - 4px) 100%,0 100%,0 4px);}
+
+/* ── FOOTER ──────────────────────────────── */
+footer{background:var(--bg);border-top:1px solid var(--border);padding:5rem 6rem 2rem;}
+.footer-grid{display:grid;grid-template-columns:2fr 1fr 1fr 1fr;gap:4rem;margin-bottom:4rem;}
+.footer-brand .nav-logo{font-size:1.5rem;margin-bottom:1.5rem;display:block;}
+.footer-brand p{font-size:.9rem;color:var(--grey);line-height:1.8;max-width:280px;margin-bottom:2rem;}
+.social-links{display:flex;gap:1rem;}
+.social-link{width:38px;height:38px;border:1px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:1rem;transition:all .3s;clip-path:polygon(6px 0,100% 0,100% calc(100% - 6px),calc(100% - 6px) 100%,0 100%,0 6px);text-decoration:none;color:var(--grey);}
+.social-link:hover{border-color:var(--cyan);color:var(--cyan);box-shadow:var(--glow);background:rgba(0,245,255,0.05);}
+.footer-col h4{font-family:var(--font-head);font-size:.75rem;font-weight:600;color:var(--white);letter-spacing:2px;text-transform:uppercase;margin-bottom:1.5rem;}
+.footer-col ul{list-style:none;}
+.footer-col ul li{margin-bottom:.8rem;}
+.footer-col ul li a{font-size:.9rem;color:var(--grey);text-decoration:none;transition:color .3s;display:flex;align-items:center;gap:.5rem;}
+.footer-col ul li a::before{content:'›';color:var(--cyan);opacity:0;transform:translateX(-5px);transition:all .3s;}
+.footer-col ul li a:hover{color:var(--cyan);}
+.footer-col ul li a:hover::before{opacity:1;transform:translateX(0);}
+.footer-bottom{border-top:1px solid var(--border);padding-top:2rem;display:flex;align-items:center;justify-content:space-between;flex-wrap:gap:1rem;}
+.footer-bottom p{font-family:var(--font-mono);font-size:.7rem;color:var(--grey);letter-spacing:1px;}
+.footer-status{display:flex;align-items:center;gap:.5rem;font-family:var(--font-mono);font-size:.7rem;color:var(--grey);}
+.status-dot{width:8px;height:8px;border-radius:50%;background:var(--cyan);box-shadow:0 0 10px var(--cyan);animation:pulse 2s ease-in-out infinite;}
+@keyframes pulse{0%,100%{opacity:1;transform:scale(1);}50%{opacity:.5;transform:scale(1.3);}}
+
+/* ── GLITCH ──────────────────────────────── */
+@keyframes glitch{0%,100%{clip-path:inset(0 0 98% 0);transform:translate(-2px,0);}25%{clip-path:inset(50% 0 30% 0);transform:translate(2px,0);}50%{clip-path:inset(20% 0 60% 0);transform:translate(-1px,0);}75%{clip-path:inset(80% 0 5% 0);transform:translate(1px,0);}}
+.glitch-text{position:relative;}
+.glitch-text::before,.glitch-text::after{content:attr(data-text);position:absolute;inset:0;background:linear-gradient(135deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
+.glitch-text::before{animation:glitch 4s ease-in-out infinite;color:var(--cyan);opacity:.5;}
+.glitch-text::after{animation:glitch 4s ease-in-out infinite reverse;color:var(--pink);opacity:.3;}
+
+/* ── SCAN LINE ───────────────────────────── */
+.scanline{position:fixed;top:0;left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.4;animation:scanMove 4s linear infinite;pointer-events:none;z-index:9990;}
+@keyframes scanMove{0%{top:-2px;}100%{top:100vh;}}
+
+/* ── NOISE OVERLAY ───────────────────────── */
+.noise{position:fixed;inset:0;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.03'/%3E%3C/svg%3E");pointer-events:none;z-index:9989;opacity:.4;}
+
+/* ── LOADING ─────────────────────────────── */
+#loader{position:fixed;inset:0;background:var(--bg);z-index:99999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2rem;}
+.loader-logo{font-family:var(--font-head);font-size:2rem;font-weight:700;background:linear-gradient(90deg,var(--cyan),var(--violet2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:4px;}
+.loader-bar{width:300px;height:2px;background:rgba(0,245,255,0.1);position:relative;overflow:hidden;}
+.loader-progress{height:100%;background:linear-gradient(90deg,var(--cyan),var(--violet));width:0;transition:width .1s linear;box-shadow:0 0 20px var(--cyan);}
+.loader-text{font-family:var(--font-mono);font-size:.7rem;color:var(--grey);letter-spacing:3px;}
+
+/* ── RESPONSIVE ──────────────────────────── */
+@media(max-width:900px){
+  nav{padding:1rem 1.5rem;}
+  .nav-links,.nav-cta{display:none;}
+  .hamburger{display:flex;}
+  section{padding:5rem 1.5rem;}
+  .hero-content{padding:0 1.5rem;}
+  .hero-stats{right:1.5rem;bottom:5rem;}
+  .stat-num{font-size:1.4rem;}
+  .about-grid{grid-template-columns:1fr;gap:3rem;}
+  .about-visual{height:300px;}
+  .footer-grid{grid-template-columns:1fr 1fr;gap:2rem;}
+  .partners-header{padding:0 1.5rem;}
+  .footer-bottom{flex-direction:column;gap:.5rem;align-items:flex-start;}
+  footer{padding:3rem 1.5rem 1.5rem;}
+  .hero-title{font-size:clamp(2.2rem,10vw,4rem);}
+}
+@media(max-width:600px){
+  .about-features{grid-template-columns:1fr;}
+  .footer-grid{grid-template-columns:1fr;}
+  .hero-stats{display:none;}
+  .products-filter{gap:.5rem;}
+  .filter-btn{font-size:.6rem;padding:.4rem 1rem;}
+}
+
+/* ── MOBILE NAV MENU ──── */
+.mobile-nav{position:fixed;inset:0;background:rgba(4,4,12,0.97);backdrop-filter:blur(30px);z-index:998;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2.5rem;transform:translateX(100%);transition:transform .5s cubic-bezier(.4,0,.2,1);}
+.mobile-nav.open{transform:translateX(0);}
+.mobile-nav a{font-family:var(--font-head);font-size:1.5rem;color:var(--grey);text-decoration:none;letter-spacing:3px;text-transform:uppercase;transition:color .3s;}
+.mobile-nav a:hover{color:var(--cyan);text-shadow:0 0 20px var(--cyan);}
+.mobile-close{position:absolute;top:1.5rem;right:1.5rem;font-size:1.5rem;color:var(--grey);background:none;border:none;}
+
+/* ── SCROLL REVEAL ───────────────────────── */
+.reveal{opacity:0;transform:translateY(40px);}
+.reveal-left{opacity:0;transform:translateX(-60px);}
+.reveal-right{opacity:0;transform:translateX(60px);}
+
+/* ── TECH LINES BG ───────────────────────── */
+.tech-bg{position:absolute;inset:0;overflow:hidden;pointer-events:none;}
+.tech-line{position:absolute;background:linear-gradient(transparent,var(--cyan),transparent);width:1px;opacity:.15;animation:techFlow 6s ease-in-out infinite;}
+@keyframes techFlow{0%,100%{transform:translateY(-100%);opacity:0;}50%{opacity:.3;}100%{transform:translateY(200%);opacity:0;}}
+</style>
+</head>
+<body>
+
+<!-- LOADER -->
+<div id="loader">
+  <div class="loader-logo">TECH DAANOB</div>
+  <div class="loader-bar"><div class="loader-progress" id="loaderBar"></div></div>
+  <div class="loader-text" id="loaderText">INITIALIZING SYSTEMS...</div>
+</div>
+
+<!-- CURSOR -->
+<div id="cursor"></div>
+<div id="cursor-ring"></div>
+<div id="cursor-trail"></div>
+
+<!-- SCAN LINE -->
+<div class="scanline"></div>
+<div class="noise"></div>
+
+<!-- MOBILE NAV -->
+<div class="mobile-nav" id="mobileNav">
+  <button class="mobile-close" id="mobileClose">✕</button>
+  <a href="#hero">Home</a>
+  <a href="#about">About</a>
+  <a href="#products">Products</a>
+  <a href="#partners">Partners</a>
+  <a href="#reviews">Reviews</a>
+</div>
+
+<!-- NAV -->
+<nav id="navbar">
+  <div class="nav-logo">TECH<span>·</span>DAANOB</div>
+  <ul class="nav-links">
+    <li><a href="#hero">Home</a></li>
+    <li><a href="#about">About</a></li>
+    <li><a href="#products">Products</a></li>
+    <li><a href="#partners">Partners</a></li>
+    <li><a href="#reviews">Reviews</a></li>
+  </ul>
+  <a href="#products" class="nav-cta">Shop Now</a>
+  <div class="hamburger" id="hamburger"><span></span><span></span><span></span></div>
+</nav>
+
+<!-- HERO -->
+<section id="hero">
+  <canvas id="threejs-canvas"></canvas>
+  <div class="hero-grid-line"></div>
+  <div class="hero-content">
+    <div class="hero-badge">Futuristic Tech Store</div>
+    <h1 class="hero-title">
+      <span class="line"><span class="t1" data-text="NEXT-GEN">NEXT-GEN</span></span>
+      <span class="line"><span class="t2 glitch-text" data-text="GADGETS">GADGETS</span></span>
+    </h1>
+    <p class="hero-sub">Step into the future with cutting-edge tech accessories that redefine your digital lifestyle. Premium quality, unmatched performance.</p>
+    <div class="hero-btns">
+      <a href="#products" class="btn-primary">Explore Products</a>
+      <a href="#about" class="btn-secondary">About Us</a>
+    </div>
+  </div>
+  <div class="hero-stats">
+    <div class="stat-item reveal-right">
+      <div class="stat-num" data-count="500">0</div>
+      <div class="stat-label">Products</div>
+    </div>
+    <div class="stat-item reveal-right">
+      <div class="stat-num" data-count="12000">0</div>
+      <div class="stat-label">Customers</div>
+    </div>
+    <div class="stat-item reveal-right">
+      <div class="stat-num" data-count="50">0</div>
+      <div class="stat-label">Brands</div>
+    </div>
+  </div>
+  <div class="hero-scroll">
+    <span>Scroll</span>
+    <div class="scroll-line"></div>
+  </div>
+</section>
+
+<!-- ABOUT -->
+<section id="about">
+  <div class="tech-bg">
+    <div class="tech-line" style="left:10%;height:300px;animation-delay:0s;animation-duration:5s;"></div>
+    <div class="tech-line" style="left:30%;height:200px;animation-delay:1s;animation-duration:7s;"></div>
+    <div class="tech-line" style="left:70%;height:400px;animation-delay:2s;animation-duration:4s;"></div>
+    <div class="tech-line" style="left:90%;height:250px;animation-delay:.5s;animation-duration:6s;"></div>
+  </div>
+  <div class="section-header reveal">
+    <div class="section-label">Who We Are</div>
+    <h2 class="section-title">Powering the <span class="accent">Future</span></h2>
+  </div>
+  <div class="about-grid">
+    <div class="about-visual reveal-left">
+      <canvas id="about-canvas"></canvas>
+    </div>
+    <div class="about-text reveal-right">
+      <p>Tech Daanob is Bangladesh's premier destination for cutting-edge tech accessories and gadgets. We curate the finest selection of innovative technology products that enhance your daily life.</p>
+      <p>From smart home devices to professional audio gear, from precision input devices to ambient lighting — we bring tomorrow's technology to you today.</p>
+      <div class="about-tags">
+        <span class="tag">🎧 Audio Gear</span>
+        <span class="tag">⌨️ Input Devices</span>
+        <span class="tag">🏠 Smart Home</span>
+        <span class="tag">💡 RGB Lighting</span>
+        <span class="tag">🖱️ Peripherals</span>
+        <span class="tag">⌚ Wearables</span>
+        <span class="tag">📡 Connectivity</span>
+        <span class="tag">🔋 Power Banks</span>
+      </div>
+      <div class="about-features">
+        <div class="feature-card reveal">
+          <div class="feature-icon">🚀</div>
+          <div class="feature-title">Fast Delivery</div>
+          <div class="feature-desc">Express shipping across Bangladesh within 48 hours.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🛡️</div>
+          <div class="feature-title">Genuine Products</div>
+          <div class="feature-desc">100% authentic products with manufacturer warranty.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">💎</div>
+          <div class="feature-title">Premium Quality</div>
+          <div class="feature-desc">Carefully curated for performance and durability.</div>
+        </div>
+        <div class="feature-card reveal">
+          <div class="feature-icon">🔧</div>
+          <div class="feature-title">24/7 Support</div>
+          <div class="feature-desc">Our tech experts are always here to help you.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- PRODUCTS -->
+<section id="products">
+  <div class="section-header reveal">
+    <div class="section-label">Our Collection</div>
+    <h2 class="section-title">Featured <span class="accent">Products</span></h2>
+  </div>
+  <div class="products-filter reveal">
+    <button class="filter-btn active" data-filter="all">All</button>
+    <button class="filter-btn" data-filter="audio">Audio</button>
+    <button class="filter-btn" data-filter="input">Input Devices</button>
+    <button class="filter-btn" data-filter="smart">Smart Home</button>
+    <button class="filter-btn" data-filter="wearable">Wearables</button>
+    <button class="filter-btn" data-filter="power">Power</button>
+  </div>
+  <div class="products-grid" id="productsGrid">
+    <!-- JS rendered -->
+  </div>
+</section>
+
+<!-- 3D CAROUSEL -->
+<section id="carousel-section">
+  <div class="section-header reveal">
+    <div class="section-label">Trending Now</div>
+    <h2 class="section-title">Top <span class="accent">Picks</span></h2>
+  </div>
+  <div class="carousel-wrapper">
+    <div class="carousel-track" id="carouselTrack">
+    </div>
+  </div>
+  <div class="carousel-controls">
+    <button class="cc-btn" id="prevBtn">‹</button>
+    <button class="cc-btn" id="nextBtn">›</button>
+  </div>
+</section>
+
+<!-- PARTNERS -->
+<section id="partners">
+  <div class="partners-header reveal">
+    <div class="section-label">Trusted By</div>
+    <h2 class="section-title">Our <span class="accent">Partners</span></h2>
+  </div>
+  <div class="marquee-container" style="margin-bottom:1.5rem;">
+    <div class="marquee-track" id="marquee1"></div>
+  </div>
+  <div class="marquee-container">
+    <div class="marquee-track marquee-track2" id="marquee2"></div>
+  </div>
+</section>
+
+<!-- REVIEWS -->
+<section id="reviews">
+  <div class="section-header reveal">
+    <div class="section-label">Happy Customers</div>
+    <h2 class="section-title">What People <span class="accent">Say</span></h2>
+  </div>
+  <div class="reviews-grid" id="reviewsGrid"></div>
+</section>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-grid">
+    <div class="footer-brand">
+      <span class="nav-logo">TECH<span>·</span>DAANOB</span>
+      <p>Bangladesh's leading tech gadget store. We bring the future of technology to your doorstep with premium quality and unmatched service.</p>
+      <div class="social-links">
+        <a class="social-link" href="#">𝕏</a>
+        <a class="social-link" href="#">f</a>
+        <a class="social-link" href="#">in</a>
+        <a class="social-link" href="#">▶</a>
+      </div>
+    </div>
+    <div class="footer-col">
+      <h4>Products</h4>
+      <ul>
+        <li><a href="#">Audio Gear</a></li>
+        <li><a href="#">Smart Home</a></li>
+        <li><a href="#">Wearables</a></li>
+        <li><a href="#">Input Devices</a></li>
+        <li><a href="#">Power Banks</a></li>
+        <li><a href="#">Connectivity</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Company</h4>
+      <ul>
+        <li><a href="#">About Us</a></li>
+        <li><a href="#">Our Story</a></li>
+        <li><a href="#">Careers</a></li>
+        <li><a href="#">Press Kit</a></li>
+        <li><a href="#">Partners</a></li>
+      </ul>
+    </div>
+    <div class="footer-col">
+      <h4>Support</h4>
+      <ul>
+        <li><a href="#">Help Center</a></li>
+        <li><a href="#">Shipping Info</a></li>
+        <li><a href="#">Returns</a></li>
+        <li><a href="#">Warranty</a></li>
+        <li><a href="#">Contact Us</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <p>© 2025 Tech Daanob. All rights reserved. | Dhaka, Bangladesh</p>
+    <div class="footer-status">
+      <div class="status-dot"></div>
+      All systems operational
+    </div>
+  </div>
+</footer>
+
+<script>
+/* ══════════════════════════════════════════
+   LOADER
+══════════════════════════════════════════ */
+const msgs=['INITIALIZING SYSTEMS...','LOADING ASSETS...','CALIBRATING INTERFACE...','ENGAGING HYPERDRIVE...','READY.'];
+let prog=0;
+const bar=document.getElementById('loaderBar');
+const loaderTxt=document.getElementById('loaderText');
+const loaderInterval=setInterval(()=>{
+  prog+=Math.random()*12+5;
+  if(prog>100){prog=100;clearInterval(loaderInterval);}
+  bar.style.width=prog+'%';
+  loaderTxt.textContent=msgs[Math.floor(prog/25)]||'READY.';
+  if(prog>=100){
+    setTimeout(()=>{
+      gsap.to('#loader',{opacity:0,duration:.8,onComplete:()=>{
+        document.getElementById('loader').style.display='none';
+        initAnimations();
+      }});
+    },500);
+  }
+},120);
+
+/* ══════════════════════════════════════════
+   CUSTOM CURSOR
+══════════════════════════════════════════ */
+const cursor=document.getElementById('cursor');
+const ring=document.getElementById('cursor-ring');
+const trail=document.getElementById('cursor-trail');
+let mx=0,my=0,rx=0,ry=0,tx=0,ty=0;
+window.addEventListener('mousemove',e=>{
+  mx=e.clientX;my=e.clientY;
+  gsap.to(cursor,{x:mx,y:my,duration:0});
+});
+gsap.ticker.add(()=>{
+  rx+=(mx-rx)*.15;ry+=(my-ry)*.15;
+  tx+=(mx-tx)*.07;ty+=(my-ty)*.07;
+  gsap.set(ring,{x:rx,y:ry});
+  gsap.set(trail,{x:tx,y:ty});
+});
+document.querySelectorAll('a,button,.product-card,.filter-btn').forEach(el=>{
+  el.addEventListener('mouseenter',()=>{
+    gsap.to(cursor,{width:24,height:24,duration:.3});
+    gsap.to(ring,{width:60,height:60,borderColor:'rgba(0,245,255,0.8)',duration:.3});
+  });
+  el.addEventListener('mouseleave',()=>{
+    gsap.to(cursor,{width:12,height:12,duration:.3});
+    gsap.to(ring,{width:40,height:40,borderColor:'rgba(0,245,255,0.5)',duration:.3});
+  });
+});
+
+/* ══════════════════════════════════════════
+   THREE.JS — HERO PARTICLE SPHERE
+══════════════════════════════════════════ */
+function initHeroThree(){
+  const canvas=document.getElementById('threejs-canvas');
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  renderer.setSize(canvas.offsetWidth,canvas.offsetHeight);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(60,canvas.offsetWidth/canvas.offsetHeight,0.1,1000);
+  camera.position.z=5;
+
+  // Particle sphere
+  const geo=new THREE.BufferGeometry();
+  const N=8000;
+  const pos=new Float32Array(N*3);
+  const col=new Float32Array(N*3);
+  for(let i=0;i<N;i++){
+    const phi=Math.acos(2*Math.random()-1);
+    const theta=2*Math.PI*Math.random();
+    const r=2+Math.random()*.3;
+    pos[i*3]=r*Math.sin(phi)*Math.cos(theta);
+    pos[i*3+1]=r*Math.sin(phi)*Math.sin(theta);
+    pos[i*3+2]=r*Math.cos(phi);
+    const mix=Math.random();
+    col[i*3]=mix<.5?0:mix;
+    col[i*3+1]=mix<.5?mix+.5:0;
+    col[i*3+2]=1;
+  }
+  geo.setAttribute('position',new THREE.BufferAttribute(pos,3));
+  geo.setAttribute('color',new THREE.BufferAttribute(col,3));
+  const mat=new THREE.PointsMaterial({size:.02,vertexColors:true,transparent:true,opacity:.8});
+  const points=new THREE.Points(geo,mat);
+  scene.add(points);
+
+  // Inner core
+  const coreGeo=new THREE.SphereGeometry(1.2,32,32);
+  const coreMat=new THREE.MeshBasicMaterial({
+    color:0x00f5ff,wireframe:true,transparent:true,opacity:.05
+  });
+  scene.add(new THREE.Mesh(coreGeo,coreMat));
+
+  // Ring
+  const ringGeo=new THREE.TorusGeometry(2.5,.015,8,120);
+  const ringMat=new THREE.MeshBasicMaterial({color:0x00f5ff,transparent:true,opacity:.3});
+  const ring3=new THREE.Mesh(ringGeo,ringMat);
+  ring3.rotation.x=Math.PI/3;
+  scene.add(ring3);
+
+  const ring2Geo=new THREE.TorusGeometry(2.2,.01,8,120);
+  const ring2Mat=new THREE.MeshBasicMaterial({color:0x7b2fff,transparent:true,opacity:.2});
+  const ring2=new THREE.Mesh(ring2Geo,ring2Mat);
+  ring2.rotation.x=Math.PI/4;
+  ring2.rotation.y=Math.PI/6;
+  scene.add(ring2);
+
+  let t=0;
+  function animate(){
+    requestAnimationFrame(animate);
+    t+=.005;
+    points.rotation.y=t*.3;
+    points.rotation.x=t*.1;
+    ring3.rotation.z=t*.2;
+    ring2.rotation.z=-t*.15;
+    renderer.render(scene,camera);
+  }
+  animate();
+
+  window.addEventListener('resize',()=>{
+    const w=canvas.offsetWidth,h=canvas.offsetHeight;
+    camera.aspect=w/h;camera.updateProjectionMatrix();
+    renderer.setSize(w,h);
+  });
+
+  window.addEventListener('mousemove',e=>{
+    const nx=(e.clientX/window.innerWidth-.5)*2;
+    const ny=(e.clientY/window.innerHeight-.5)*2;
+    gsap.to(points.rotation,{y:t*.3+nx*.3,x:t*.1+ny*.2,duration:2});
+  });
+}
+
+/* ══════════════════════════════════════════
+   THREE.JS — ABOUT FLOATING TORUS
+══════════════════════════════════════════ */
+function initAboutThree(){
+  const canvas=document.getElementById('about-canvas');
+  if(!canvas)return;
+  const renderer=new THREE.WebGLRenderer({canvas,alpha:true,antialias:true});
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
+  const w=canvas.offsetWidth,h=canvas.offsetHeight;
+  renderer.setSize(w,h);
+  const scene=new THREE.Scene();
+  const camera=new THREE.PerspectiveCamera(55,w/h,.1,100);
+  camera.position.z=4;
+
+  const torusGeo=new THREE.TorusKnotGeometry(1.2,.35,180,20);
+  const torusMat=new THREE.MeshBasicMaterial({color:0x00f5ff,wireframe:true,transparent:true,opacity:.4});
+  const torus=new THREE.Mesh(torusGeo,torusMat);
+  scene.add(torus);
+
+  const pGeo=new THREE.BufferGeometry();
+  const pN=3000,pPos=new Float32Array(pN*3);
+  for(let i=0;i<pN;i++){
+    pPos[i*3]=(Math.random()-.5)*8;
+    pPos[i*3+1]=(Math.random()-.5)*8;
+    pPos[i*3+2]=(Math.random()-.5)*8;
+  }
+  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
+  const pMat=new THREE.PointsMaterial({size:.03,color:0x7b2fff,transparent:true,opacity:.5});
+  scene.add(new THREE.Points(pGeo,pMat));
+
+  let t=0;
+  (function animate(){
+    requestAnimationFrame(animate);
+    t+=.008;
+    torus.rotation.x=t*.5;
+    torus.rotation.y=t*.3;
+    renderer.render(scene,camera);
+  })();
+}
+
+/* ══════════════════════════════════════════
+   PRODUCTS DATA
+══════════════════════════════════════════ */
+const products=[
+  {emoji:'🎧',name:'AirPod Pro X',cat:'audio',category:'Earbuds',desc:'Active noise cancellation with spatial audio and 32-hour battery life.',price:'৳4,500',badge:'HOT',badgeClass:'hot'},
+  {emoji:'⌨️',name:'Razer BlackWidow V4',cat:'input',category:'Keyboard',desc:'Mechanical gaming keyboard with Chroma RGB and tactile switches.',price:'৳8,200',badge:'NEW',badgeClass:'new'},
+  {emoji:'💡',name:'Govee Neon Light Strip',cat:'smart',category:'Smart Lighting',desc:'AI-powered ambient lighting with 16M colors and music sync.',price:'৳2,800',badge:'SALE',badgeClass:''},
+  {emoji:'⌚',name:'Galaxy Watch Ultra',cat:'wearable',category:'Smartwatch',desc:'Military-grade fitness tracker with ECG, SpO2 and 4-day battery.',price:'৳12,000',badge:'HOT',badgeClass:'hot'},
+  {emoji:'🖱️',name:'Logitech MX Master 4',cat:'input',category:'Mouse',desc:'Advanced wireless mouse with electromagnetic scrolling and 70-day battery.',price:'৳6,500',badge:'',badgeClass:''},
+  {emoji:'🔋',name:'Anker MagSafe 30K',cat:'power',category:'Power Bank',desc:'140W MagSafe-compatible power bank with 30000mAh and fast charging.',price:'৳5,200',badge:'NEW',badgeClass:'new'},
+  {emoji:'🔊',name:'JBL Charge 6',cat:'audio',category:'Speaker',desc:'Waterproof Bluetooth speaker with 24h playtime and 360° surround sound.',price:'৳7,800',badge:'',badgeClass:''},
+  {emoji:'🏠',name:'Echo Hub Smart Display',cat:'smart',category:'Smart Home',desc:'8" smart home control panel with Alexa built-in and Matter support.',price:'৳9,500',badge:'NEW',badgeClass:'new'},
+  {emoji:'🎮',name:'PlayStation DualSense Edge',cat:'input',category:'Controller',desc:'Pro wireless controller with customizable back buttons and adaptive triggers.',price:'৳11,000',badge:'HOT',badgeClass:'hot'},
+  {emoji:'📡',name:'TP-Link AXE7800 WiFi 6E',cat:'smart',category:'Networking',desc:'Tri-band WiFi 6E router with 8 streams and 2.5G WAN port.',price:'৳14,500',badge:'',badgeClass:''},
+  {emoji:'🕶️',name:'Meta Ray-Ban Smart Glasses',cat:'wearable',category:'Smart Glasses',desc:'AI-powered smart glasses with open-ear speakers and camera.',price:'৳18,000',badge:'NEW',badgeClass:'new'},
+  {emoji:'⚡',name:'GaN Charger 240W',cat:'power',category:'Charger',desc:'Ultra-compact GaN technology with 4 ports and intelligent power distribution.',price:'৳3,200',badge:'',badgeClass:''},
+];
+
+function renderProducts(filter='all'){
+  const grid=document.getElementById('productsGrid');
+  const filtered=filter==='all'?products:products.filter(p=>p.cat===filter);
+  grid.innerHTML=filtered.map((p,i)=>`
+    <div class="product-card reveal" style="animation-delay:${i*.08}s">
+      <div class="product-img">${p.emoji}${p.badge?`<span class="product-badge ${p.badgeClass}">${p.badge}</span>`:''}</div>
+      <div class="product-info">
+        <div class="product-cat">${p.category}</div>
+        <div class="product-name">${p.name}</div>
+        <div class="product-desc">${p.desc}</div>
+        <div class="product-footer">
+          <div class="product-price">${p.price}</div>
+          <button class="product-btn">Add to Cart</button>
+        </div>
+      </div>
+    </div>
+  `).join('');
+  // Re-trigger reveal for new cards
+  grid.querySelectorAll('.reveal').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,duration:.6,delay:parseFloat(el.style.animationDelay)||0,ease:'power3.out'});
+  });
+}
+renderProducts();
+
+document.querySelectorAll('.filter-btn').forEach(btn=>{
+  btn.addEventListener('click',function(){
+    document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+    this.classList.add('active');
+    renderProducts(this.dataset.filter);
+  });
+});
+
+/* ══════════════════════════════════════════
+   3D CAROUSEL
+══════════════════════════════════════════ */
+const carouselItems=[
+  {emoji:'🎧',title:'AirPod Pro X',text:'Premium ANC earbuds with spatial audio.',price:'৳4,500'},
+  {emoji:'⌚',title:'Galaxy Watch Ultra',text:'Military-grade smartwatch with health sensors.',price:'৳12,000'},
+  {emoji:'🔊',title:'JBL Charge 6',text:'360° waterproof Bluetooth speaker.',price:'৳7,800'},
+  {emoji:'⌨️',title:'Razer BlackWidow V4',text:'Pro mechanical gaming keyboard.',price:'৳8,200'},
+  {emoji:'🕶️',title:'Smart Glasses',text:'AI-powered Ray-Ban smart glasses.',price:'৳18,000'},
+  {emoji:'💡',title:'Govee Neon Strip',text:'16M color AI ambient lighting.',price:'৳2,800'},
+  {emoji:'🖱️',title:'MX Master 4',text:'Advanced wireless ergonomic mouse.',price:'৳6,500'},
+];
+const track=document.getElementById('carouselTrack');
+track.innerHTML=carouselItems.map((c,i)=>`
+  <div class="carousel-card" data-index="${i}">
+    <div class="card-icon">${c.emoji}</div>
+    <div>
+      <div class="card-title">${c.title}</div>
+      <div class="card-text">${c.text}</div>
+    </div>
+    <div class="card-price">${c.price}</div>
+  </div>
+`).join('');
+
+let carouselAngle=0;
+const cards=track.querySelectorAll('.carousel-card');
+const total=cards.length;
+const radius=380;
+
+function updateCarousel(){
+  cards.forEach((card,i)=>{
+    const angle=((i/total)*Math.PI*2)+carouselAngle;
+    const x=Math.sin(angle)*radius;
+    const z=Math.cos(angle)*radius;
+    const scale=((z+radius)/(radius*2))*.6+.4;
+    const blur=Math.max(0,(1-scale)*8);
+    const opacity=.3+scale*.7;
+    card.style.transform=`translateX(${x}px) translateZ(${z}px) scale(${scale})`;
+    card.style.filter=`blur(${blur}px)`;
+    card.style.opacity=opacity;
+    card.style.zIndex=Math.round(scale*100);
+  });
+}
+updateCarousel();
+
+let autoRotate=setInterval(()=>{carouselAngle+=.3;updateCarousel();},30);
+document.getElementById('nextBtn').addEventListener('click',()=>{
+  gsap.to({v:carouselAngle},{v:carouselAngle-(Math.PI*2/total),duration:.8,ease:'power2.inOut',
+    onUpdate:function(){carouselAngle=this.targets()[0].v;updateCarousel();}});
+});
+document.getElementById('prevBtn').addEventListener('click',()=>{
+  gsap.to({v:carouselAngle},{v:carouselAngle+(Math.PI*2/total),duration:.8,ease:'power2.inOut',
+    onUpdate:function(){carouselAngle=this.targets()[0].v;updateCarousel();}});
+});
+track.addEventListener('mouseenter',()=>clearInterval(autoRotate));
+track.addEventListener('mouseleave',()=>{autoRotate=setInterval(()=>{carouselAngle+=.3;updateCarousel();},30);});
+
+/* ══════════════════════════════════════════
+   PARTNERS MARQUEE
+══════════════════════════════════════════ */
+const partners1=[
+  {icon:'🎵',name:'Sony'},
+  {icon:'🔊',name:'JBL'},
+  {icon:'🎮',name:'Razer'},
+  {icon:'📱',name:'Samsung'},
+  {icon:'🖥️',name:'Logitech'},
+  {icon:'🎧',name:'Bose'},
+  {icon:'💡',name:'Philips Hue'},
+  {icon:'⚡',name:'Anker'},
+];
+const partners2=[
+  {icon:'🏠',name:'Amazon'},
+  {icon:'🔵',name:'Intel'},
+  {icon:'🖱️',name:'SteelSeries'},
+  {icon:'📡',name:'TP-Link'},
+  {icon:'🔋',name:'Ugreen'},
+  {icon:'🎤',name:'Shure'},
+  {icon:'🕹️',name:'8BitDo'},
+  {icon:'💻',name:'Corsair'},
+];
+function buildMarquee(id,data){
+  const el=document.getElementById(id);
+  const doubled=[...data,...data];
+  el.innerHTML=doubled.map(p=>`<div class="partner-logo"><span class="partner-icon">${p.icon}</span><span class="partner-name">${p.name}</span></div>`).join('');
+}
+buildMarquee('marquee1',partners1);
+buildMarquee('marquee2',partners2);
+
+/* ══════════════════════════════════════════
+   REVIEWS
+══════════════════════════════════════════ */
+const reviews=[
+  {name:'Rahim Ahmed',role:'Tech Enthusiast',avatar:'RA',stars:5,text:'Absolutely blown away by the quality! My Razer keyboard from Tech Daanob feels premium and the delivery was lightning fast.',product:'Razer BlackWidow V4'},
+  {name:'Sadia Islam',role:'Content Creator',avatar:'SI',stars:5,text:'The JBL speaker sounds incredible and the packaging was top notch. Will definitely be ordering again very soon!',product:'JBL Charge 6'},
+  {name:'Karim Hossain',role:'Software Engineer',avatar:'KH',stars:5,text:'Best tech store in Bangladesh! Got my MX Master 4 within 24 hours. Genuine product with original warranty card.',product:'MX Master 4'},
+  {name:'Nadia Chowdhury',role:'UX Designer',avatar:'NC',stars:4,text:'Great selection of smart home products. The Govee lights transformed my setup completely. Customer support was very helpful.',product:'Govee Neon Strip'},
+  {name:'Farhan Ali',role:'Gamer',avatar:'FA',stars:5,text:'Ordered the DualSense Edge controller — it arrived sealed with all accessories. Tech Daanob is my go-to for all gadgets now!',product:'DualSense Edge'},
+  {name:'Tasnim Begum',role:'Fitness Blogger',avatar:'TB',stars:5,text:'My Galaxy Watch Ultra from Tech Daanob is 100% genuine. The health tracking features are incredible for my daily workouts.',product:'Galaxy Watch Ultra'},
+];
+document.getElementById('reviewsGrid').innerHTML=reviews.map((r,i)=>`
+  <div class="review-card reveal" style="animation-delay:${i*.1}s">
+    <div class="review-product-tag">${r.product}</div>
+    <div class="review-stars">${'★'.repeat(r.stars)}${'☆'.repeat(5-r.stars)}</div>
+    <div class="review-text">${r.text}</div>
+    <div class="review-author">
+      <div class="review-avatar">${r.avatar}</div>
+      <div>
+        <div class="review-name">${r.name}</div>
+        <div class="review-role">${r.role}</div>
+      </div>
+    </div>
+  </div>
+`).join('');
+
+/* ══════════════════════════════════════════
+   GSAP ANIMATIONS
+══════════════════════════════════════════ */
+function initAnimations(){
+  gsap.registerPlugin(ScrollTrigger);
+
+  // Hero entrance
+  gsap.fromTo('.hero-badge',{opacity:0,x:-30},{opacity:1,x:0,duration:.8,delay:.2,ease:'power3.out'});
+  gsap.fromTo('.hero-title .line span',{opacity:0,y:80},{opacity:1,y:0,duration:1,stagger:.15,delay:.4,ease:'power4.out'});
+  gsap.fromTo('.hero-sub',{opacity:0,y:30},{opacity:1,y:0,duration:.8,delay:.9,ease:'power3.out'});
+  gsap.fromTo('.hero-btns',{opacity:0,y:20},{opacity:1,y:0,duration:.8,delay:1.1,ease:'power3.out'});
+  gsap.fromTo('.stat-item',{opacity:0,x:40},{opacity:1,x:0,duration:.8,stagger:.2,delay:1.3,ease:'power3.out'});
+
+  // Scroll reveals
+  gsap.utils.toArray('.reveal').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,y:40},{opacity:1,y:0,duration:.8,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 88%',toggleActions:'play none none none'}});
+  });
+  gsap.utils.toArray('.reveal-left').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,x:-60},{opacity:1,x:0,duration:1,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 85%'}});
+  });
+  gsap.utils.toArray('.reveal-right').forEach(el=>{
+    gsap.fromTo(el,{opacity:0,x:60},{opacity:1,x:0,duration:1,ease:'power3.out',
+      scrollTrigger:{trigger:el,start:'top 85%'}});
+  });
+
+  // Parallax hero grid
+  gsap.to('.hero-grid-line',{
+    y:'-20%',ease:'none',
+    scrollTrigger:{trigger:'#hero',start:'top top',end:'bottom top',scrub:true}
+  });
+
+  // Nav background
+  ScrollTrigger.create({
+    start:'top -80',
+    onEnter:()=>gsap.to('#navbar',{background:'rgba(4,4,12,0.95)',duration:.3}),
+    onLeaveBack:()=>gsap.to('#navbar',{background:'rgba(4,4,12,0.7)',duration:.3}),
+  });
+
+  // Counter animation
+  document.querySelectorAll('[data-count]').forEach(el=>{
+    const target=+el.dataset.count;
+    ScrollTrigger.create({
+      trigger:el,start:'top 90%',
+      onEnter:()=>{
+        gsap.fromTo({v:0},{v:target},{duration:2,ease:'power2.out',
+          onUpdate:function(){el.textContent=Math.round(this.targets()[0].v).toLocaleString()+(target>999?'+':'+')}});
+      }
+    });
+  });
+
+  // Section parallax
+  gsap.utils.toArray('section').forEach(s=>{
+    gsap.to(s.querySelector('.tech-bg'),{
+      y:'-10%',ease:'none',
+      scrollTrigger:{trigger:s,start:'top bottom',end:'bottom top',scrub:1}
+    });
+  });
+
+  initHeroThree();
+  initAboutThree();
+}
+
+/* ══════════════════════════════════════════
+   MOBILE NAV
+══════════════════════════════════════════ */
+document.getElementById('hamburger').addEventListener('click',()=>{
+  document.getElementById('mobileNav').classList.add('open');
+});
+document.getElementById('mobileClose').addEventListener('click',()=>{
+  document.getElementById('mobileNav').classList.remove('open');
+});
+document.querySelectorAll('.mobile-nav a').forEach(a=>{
+  a.addEventListener('click',()=>document.getElementById('mobileNav').classList.remove('open'));
+});
+</script>
+</body>
+</html>
